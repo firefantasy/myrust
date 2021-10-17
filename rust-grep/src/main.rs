@@ -19,7 +19,7 @@ fn pprint(n: u32, content: &str, arr:Vec<Match>) {
         last = end;
     }
     format_str.push_str(&format!("{}", &content[last..]));
-    println!("    {}: {}", n, format_str);
+    print!("{0: >6}: {1: <3}", n, format_str);
 }
 
 #[tokio::main]
@@ -32,24 +32,8 @@ async fn main()  -> io::Result<()> {
     let pattern = matches.value_of("pattern").unwrap();
     let filename = matches.value_of("filename").unwrap();
     let re = Regex::new(pattern).unwrap();
-    if filename.is_empty() || filename == "-" {
-        let mut input = String::new();
-        loop {
-            match io::stdin().read_line(&mut input) {
-                
-                Ok(_) => {
-                    if input.is_empty() {
-                        break;
-                    }
-                    println!("input: {:?}", input);
-                    input.clear();
-                }
-                Err(_)=>{}
-            }
-        }
-    }
 
-    for entry in glob(&filename.to_owned()).expect("is a path") {
+    for entry in glob(&filename).expect("is a path") {
         match entry {
             Ok(path) => {
                 let f = File::open(&path).await?;
