@@ -9,6 +9,16 @@ use std::net::TcpStream;
 use byteorder::{ByteOrder, BigEndian};
 
 
+const Z0: &str = "吃了没，您吶?";
+const Z3: &str = "嗨！吃饱了溜溜弯儿。";
+const Z5: &str  = "回头去给老太太请安！";
+const L1: &str  = "刚吃。";
+const L2: &str  = "您这，嘛去？";
+const L4: &str = "有空家里坐坐啊。";
+
+const SAYTOTAL: u32 = 100000;
+const LISTENTOTAL: u32 = SAYTOTAL * 3;
+
 fn main() {
     let liWriteLock: Mutex<u8> =  Mutex::new(0);    // 李大爷的写锁
     let zhangWriteLock: Mutex<u8> = Mutex::new(0); // 张大爷的写锁
@@ -18,37 +28,24 @@ fn main() {
         Payload: String
     }
 
-    // let mut zRecvCount: u32 = 0; // 张大爷听到了多少句话
-    // let mut lRecvCount: u32 = 0; // 李大爷听到了多少句话
-    // let total: u32 = 1; // 总共需要遇见多少次
-
-    // let z0: String = String::from("吃了没，您吶?");
-    // let z3: String = String::from("嗨！吃饱了溜溜弯儿。");
-    // let z5: String = String::from("回头去给老太太请安！");
-    // let l1: String = String::from("刚吃。");
-    // let l2: String = String::from("您这，嘛去？");
-    // let l4: String = String::from("有空家里坐坐啊。");
 
     fn zhangDaYeListen(conn: &mut TcpStream, zhangWriteLock: Arc<Mutex<u8>>) {
-        let total = 100000 * 3;
         let mut zRecvCount = 0;
-        let l1: String = String::from("刚吃。");
-        let l2: String = String::from("您这，嘛去？");
-        let l4: String = String::from("有空家里坐坐啊。");
+        
         loop  {
-            if zRecvCount >= total {
+            if zRecvCount >= LISTENTOTAL {
                 break
             }
             let r = readFrom(conn);
             let c_mutex = Arc::clone(&zhangWriteLock);
             let mut first_stream = conn.try_clone().unwrap();
-            if r.Payload  == l2 {
-                writeTo(RequestResponse{Serial:r.Serial, Payload:String::from("嗨！吃饱了溜溜弯儿。")}, 
+            if r.Payload  == L2 {
+                writeTo(RequestResponse{Serial:r.Serial, Payload:Z3.to_string()}, 
                     conn, c_mutex)
-            } else if r.Payload == l4 {
-                writeTo(RequestResponse{Serial:r.Serial, Payload:String::from("回头去给老太太请安！")}, 
+            } else if r.Payload == L4 {
+                writeTo(RequestResponse{Serial:r.Serial, Payload:Z5.to_string()}, 
                     conn, c_mutex)
-            } else if r.Payload == l1 {
+            } else if r.Payload == L1 {
 
             } else {
                 println!("张大爷听不懂： {}", r.Payload);
@@ -61,39 +58,30 @@ fn main() {
 
     fn zhangDaYeSay(conn: &mut TcpStream, zhangWriteLock: Arc<Mutex<u8>>) {
         let mut nextSerial: u32 = 0;
-        let total: u32 = 100000; // 总共需要遇见多少次
-        // let z0: String = String::from("吃了没，您吶?");
-        for i in 0..total {
+        for i in 0..SAYTOTAL {
             let c_mutex = Arc::clone(&zhangWriteLock);
             let mut first_stream = conn.try_clone().unwrap();
-            writeTo(RequestResponse{Serial: nextSerial, Payload: String::from("吃了没，您吶?")}, 
+            writeTo(RequestResponse{Serial: nextSerial, Payload: Z0.to_string()}, 
                 conn, c_mutex);
             nextSerial += 1;
         }
     }
 
     fn liDaYeListen(conn: &mut TcpStream, liWriteLock: Arc<Mutex<u8>>) {
-        let total = 100000 * 3;
         let mut lRecvCount = 0;
-        let z0: String = String::from("吃了没，您吶?");
-        let z3: String = String::from("嗨！吃饱了溜溜弯儿。");
-        let z5: String = String::from("回头去给老太太请安！");
-        // let l1: String = String::from("刚吃。");
-        // let l2: String = String::from("您这，嘛去？");
-        // let l4: String = String::from("有空家里坐坐啊。");
 
         loop {
-            if lRecvCount >= total {
+            if lRecvCount >= LISTENTOTAL {
                 break
             }
             let r = readFrom(conn);
             let c_mutex = Arc::clone(&liWriteLock);
-            if r.Payload == z0 {
-                writeTo(RequestResponse{Serial: r.Serial, Payload: String::from("刚吃。")}, 
+            if r.Payload == Z0 {
+                writeTo(RequestResponse{Serial: r.Serial, Payload: L1.to_string()}, 
                     conn, c_mutex)
-            } else if r.Payload == z3 {
+            } else if r.Payload == Z3.to_string() {
                 // do nothing
-            } else if r.Payload == z5 {
+            } else if r.Payload == Z5.to_string() {
                 // do nothing
             } else {
                 println!("李大爷听不懂: {}", r.Payload);
@@ -105,19 +93,15 @@ fn main() {
 
     fn liDaYeSay(conn: &mut TcpStream, liWriteLock: Arc<Mutex<u8>>) {
         let mut nextSerial: u32 = 0;
-        let total = 100000;
-        // let l2: String = String::from("您这，嘛去？");
-        // let l4: String = String::from("有空家里坐坐啊。");
-
-        for _ in 0..total {
+        for _ in 0..SAYTOTAL {
             let c_mutex = Arc::clone(&liWriteLock);
             let mut first_stream = conn.try_clone().unwrap();
-            thread::spawn(move || {writeTo(RequestResponse{Serial: nextSerial, Payload:String::from("您这，嘛去？")}, 
+            thread::spawn(move || {writeTo(RequestResponse{Serial: nextSerial, Payload:L2.to_string()}, 
             &mut first_stream, c_mutex)});
             nextSerial += 1;
             let c_mutex = Arc::clone(&liWriteLock);
             let mut first_stream = conn.try_clone().unwrap();
-            thread::spawn(move || {writeTo(RequestResponse{Serial: nextSerial, Payload:String::from("有空家里坐坐啊。")}, 
+            thread::spawn(move || {writeTo(RequestResponse{Serial: nextSerial, Payload:L4.to_string()}, 
             &mut first_stream, c_mutex)});
             nextSerial += 1;
         }
