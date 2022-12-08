@@ -1,9 +1,50 @@
 [package]
 name = "duplex_talk"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 byteorder = "1"
+tokio = { version = "1.22.0", features = ["full", "rt", "net", "rt-multi-thread"] }
+# 异步网络库
+futures-core = '*'
+anyhow = "1"
+lazy_static = "1.4.0"
+
+
+[[example]]
+name = "simple_async_client"
+path = "examples/simple_async/client.rs"
+
+
+[[example]]
+name = "simple_async_server"
+path = "examples/simple_async/server.rs"
+
+
+[[example]]
+name = "simple_async"
+path = "examples/simple_async/simple_async.rs"
+
+
+[[example]]
+name = "simple_async_client_v2"
+path = "examples/simple_async_v2/client.rs"
+
+
+[[example]]
+name = "simple_async_server_v2"
+path = "examples/simple_async_v2/server.rs"
+
+
+
+[[example]]
+name = "simple_async_v2"
+path = "examples/simple_async_v2/simple_async_v2.rs"
+
+
+[[example]]
+name = "no_async"
+path = "examples/no_async/no_async.rs"
